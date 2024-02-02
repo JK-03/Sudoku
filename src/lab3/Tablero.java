@@ -129,7 +129,6 @@ public class Tablero implements Generable{
     }
 
     public boolean esSolucionValida() {
-        // Comprobar cada fila
         for (int i = 0; i < 9; i++) {
             boolean[] presentes = new boolean[9];
             for (int j = 0; j < 9; j++) {
