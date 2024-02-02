@@ -19,13 +19,8 @@ public class JuegoSudoku {
     }
 
     public void iniciarJuego() {
-        // Generar un nuevo tablero de Sudoku
         tablero.generar();
-
-        // Actualizar la interfaz con el tablero
         interfaz.actualizarInterfazConTablero();
-
-        // Mostrar la interfaz
         interfaz.setVisible(true);
         
         interfaz.botonVerificar.addActionListener(new ActionListener() {

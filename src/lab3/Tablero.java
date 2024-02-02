@@ -14,7 +14,7 @@ import java.util.Random;
  *
  * @author jenniferbueso
  */
-public class Tablero {
+public class Tablero implements Generable{
     private int[][] tablero;
     private Random random;
 
@@ -28,27 +28,26 @@ public class Tablero {
         quitarNumerosAleatorios();
     }
 
-    private void quitarNumerosAleatorios() {
-        // Dejar solo un número en cada fila, columna y bloque
+    public void quitarNumerosAleatorios() {
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                if (random.nextInt(3) != 0) {  // Cambiado a random.nextInt(3)
+                if (random.nextInt(3) != 0) {
                     tablero[i][j] = 0;
                 }
             }
         }
     }
 
-    private boolean llenarTablero(int fila, int columna) {
+    public boolean llenarTablero(int fila, int columna) {
         if (fila == 9) {
-            return true;  // Hemos llenado todo el tablero
+            return true;
         }
 
         int siguienteFila = (columna == 8) ? fila + 1 : fila;
         int siguienteColumna = (columna + 1) % 9;
 
         int[] numeros = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-        shuffleArray(numeros);  // Método para barajar el array
+        shuffleArray(numeros); 
 
         for (int numero : numeros) {
             if (esMovimientoValido(fila, columna, numero)) {
@@ -56,14 +55,13 @@ public class Tablero {
                 if (llenarTablero(siguienteFila, siguienteColumna)) {
                     return true;
                 }
-                tablero[fila][columna] = 0;  // Deshacer el cambio si no podemos continuar
+                tablero[fila][columna] = 0;
             }
         }
 
-        return false;  // No pudimos encontrar un valor válido para esta celda
+        return false; 
     }
 
-    // Método para barajar el array
     private void shuffleArray(int[] array) {
         Random random = new Random();
         for (int i = array.length - 1; i > 0; i--) {
@@ -83,21 +81,18 @@ public class Tablero {
     }
 
     public boolean esMovimientoValido(int fila, int columna, int valor) {
-        // Comprobar la fila
         for (int i = 0; i < 9; i++) {
             if (i != columna && tablero[fila][i] == valor) {
                 return false;
             }
         }
 
-        // Comprobar la columna
         for (int i = 0; i < 9; i++) {
             if (i != fila && tablero[i][columna] == valor) {
                 return false;
             }
         }
 
-        // Comprobar el cuadrante
         int inicioFila = fila / 3 * 3;
         int inicioColumna = columna / 3 * 3;
         for (int i = inicioFila; i < inicioFila + 3; i++) {
@@ -114,31 +109,22 @@ public class Tablero {
     public boolean resolver() {
         for (int fila = 0; fila < 9; fila++) {
             for (int columna = 0; columna < 9; columna++) {
-                // Buscamos una celda vacía
                 if (tablero[fila][columna] == 0) {
-                    // Intentamos números del 1 al 9
                     for (int numero = 1; numero <= 9; numero++) {
                         if (esMovimientoValido(fila, columna, numero)) {
-                            // Si el número es válido, lo colocamos en la celda
                             tablero[fila][columna] = numero;
 
-                            // Continuamos con el siguiente número
                             if (resolver()) {
                                 return true;
                             } else {
-                                // Si no podemos continuar, deshacemos el cambio y probamos con otro número
                                 tablero[fila][columna] = 0;
                             }
                         }
                     }
-
-                    // Si no encontramos un número válido, volvemos atrás
                     return false;
                 }
             }
         }
-
-        // Si todas las celdas están llenas, hemos resuelto el Sudoku
         return true;
     }
 
@@ -156,7 +142,6 @@ public class Tablero {
             }
         }
 
-        // Comprobar cada columna
         for (int j = 0; j < 9; j++) {
             boolean[] presentes = new boolean[9];
             for (int i = 0; i < 9; i++) {
@@ -169,7 +154,6 @@ public class Tablero {
             }
         }
 
-        // Comprobar cada cuadrante
         for (int i = 0; i < 9; i += 3) {
             for (int j = 0; j < 9; j += 3) {
                 boolean[] presentes = new boolean[9];
@@ -194,7 +178,6 @@ public class Tablero {
         List<Integer> numeros = new ArrayList<>(Arrays.asList(numerosArray));
         Collections.shuffle(numeros);
 
-        // Crear una lista de todas las celdas vacías
         List<int[]> celdasVacias = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
@@ -204,10 +187,8 @@ public class Tablero {
             }
         }
 
-        // Mezclar la lista de celdas vacías
         Collections.shuffle(celdasVacias);
 
-        // Buscar una pista en las celdas vacías
         for (int[] celda : celdasVacias) {
             int fila = celda[0];
             int columna = celda[1];
@@ -222,7 +203,7 @@ public class Tablero {
             }
         }
 
-        return null;  // No se encontró ninguna pista
+        return null;
     }
 
 
@@ -234,18 +215,18 @@ public class Tablero {
                         if (esMovimientoValido(fila, columna, numero)) {
                             tablero[fila][columna] = numero;
                             if (esTableroResoluble()) {
-                                tablero[fila][columna] = 0;  // Deshacer el cambio si no podemos continuar
+                                tablero[fila][columna] = 0;
                                 return true;
                             } else {
-                                tablero[fila][columna] = 0;  // Deshacer el cambio si no podemos continuar
+                                tablero[fila][columna] = 0;
                             }
                         }
                     }
-                    return false;  // No pudimos encontrar un valor válido para esta celda
+                    return false;
                 }
             }
         }
-        return true;  // Todas las celdas están llenas, por lo que el tablero es resoluble
+        return true;
     }
     
     public boolean estaLleno() {

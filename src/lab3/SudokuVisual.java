@@ -133,7 +133,7 @@ public class SudokuVisual extends JFrame {
                 campos[i][j].setText(Integer.toString(valor));
             }
         }
-        repaint();  // Agregar esta línea
+        repaint();
     }
 
     public void mostrarPista(int[] pista) {
