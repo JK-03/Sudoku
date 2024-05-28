@@ -1,0 +1,157 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs: 
+  build: 
+    name: Build Frontend Artifact
+    runs-on: ubuntu-latest
+    needs: audit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm i
+      - name: Build artifact
+        run: |
+          cd frontend
+          npm run build
+      
+      - uses: actions/upload-pages-artifact@v1
+        with: 
+          path: frontend/build
+
+      # - id: build-publish
+      #   uses: bitovi/github-actions-react-to-github-pages@v1.2.2
+      #   with:
+      #     path: build # change to your build folder
+      
+  audit:
+    name: 🪄 Audit Frontend Deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the audit on production deps only
+        run: npm audit --omit=dev 
+  
+  lint:
+    name: 📎 Ensure Code Style
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+      
+      - name: Install deps
+        run: cd frontend && npm i
+
+      - name: 🔍 Lint code
+        run: cd frontend && npm run lint
+  
+  test:
+    name: 🪛 Run Unit Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+
+      - name: Install deps
+        run: cd frontend && npm i
+
+      - name: Run the unit tests
+        run: cd frontend && npm run test-ci
+
+  static-analysis:
+    name: 🔬 Run Static Code Analysis
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          config-file: .github/codeql /codeql.config.yml
+          
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: 'npm'
+
+      - name: Install Deps
+        run: cd frontend && npm i
+
+      - name: Build
+        run: cd frontend && npm run build
+
+  deploy:
+    name: 📦 Deploy Frontend Artifact
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test
+      - static-analysis
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+
+  verify:
+    name: 🧪 Verify Successful Deployment
+    needs:
+      - deploy
+    runs-on: ubuntu-latest
+    if: success()
+    permissions: write-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run Frontend Smoke Test
+        run: |
+          export TEST_URL=${{needs.deploy.outputs.page_url}}
+          cd frontend/e2e
+          npm i
+          npm run smoke
